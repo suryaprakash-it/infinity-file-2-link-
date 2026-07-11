@@ -1,21 +1,44 @@
+import logging
 import secrets
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
 from app.config import settings
 
-security_bearer = HTTPBearer()
+logger = logging.getLogger(__name__)
 
-def verify_admin_token(credentials: HTTPAuthorizationCredentials = Depends(security_bearer)):
+security_bearer = HTTPBearer(auto_error=True)
+
+
+def verify_admin_token(
+    credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+) -> bool:
     """
-    Validates token securely via constant-time verification.
-    Prevents standard execution timing exploitation frameworks.
+    Verify admin Bearer token using constant-time comparison.
     """
-    token = credentials.credentials
-    # Use secrets.compare_digest to defend against timing side-channel attacks
-    if not secrets.compare_digest(token, settings.SECRET_KEY):
+
+    token = credentials.credentials.strip()
+
+    # Reject empty tokens
+    if not token:
+        logger.warning("Empty admin token received.")
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Access Denied: Invalid Admin Key",
+            detail="Missing authentication token.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Constant-time comparison
+    if not secrets.compare_digest(token, settings.SECRET_KEY):
+
+        logger.warning("Invalid admin authentication attempt.")
+
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Access denied.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     return True
