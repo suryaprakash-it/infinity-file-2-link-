@@ -1,25 +1,63 @@
-# Use official lightweight Python image
+# ----------------------------
+# Base Image
+# ----------------------------
 FROM python:3.11-slim
 
-# Set working directory
-WORKDIR /app
-
-# Prevent Python from writing .pyc files to disc and keep stdout unbuffered
+# ----------------------------
+# Environment
+# ----------------------------
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV PIP_NO_CACHE_DIR=1
 
-# Install system dependencies if required by Pyrogram/tgcrypto
-RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+# ----------------------------
+# Working Directory
+# ----------------------------
+WORKDIR /app
 
-# Copy requirements and install them
+# ----------------------------
+# System Packages
+# ----------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# ----------------------------
+# Install Python Dependencies
+# ----------------------------
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire project into the container
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
+# ----------------------------
+# Copy Project
+# ----------------------------
 COPY . .
 
-# Expose the port FastAPI will run on
+# ----------------------------
+# Expose Port
+# ----------------------------
 EXPOSE 8000
 
-# Command to run the application via Uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+# ----------------------------
+# Health Check
+# ----------------------------
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"
+
+# ----------------------------
+# Start Server
+# ----------------------------
+CMD [
+    "uvicorn",
+    "app.main:app",
+    "--host",
+    "0.0.0.0",
+    "--port",
+    "8000",
+    "--proxy-headers",
+    "--workers",
+    "1"
+]
