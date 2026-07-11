@@ -1,7 +1,16 @@
-# app/__init__.py
+"""
+Infinity File Link
+Application Package
+"""
 
+__title__ = "Infinity File Link"
 __version__ = "1.0.0"
-__author__ = "Your Name"
+__author__ = "Suryaprakash"
+__license__ = "MIT"
 
-# You can leave this file empty, or use it to expose key configurations 
-# so they are easily importable from the 'app' namespace later.
+__all__ = [
+    "__title__",
+    "__version__",
+    "__author__",
+    "__license__",
+]
