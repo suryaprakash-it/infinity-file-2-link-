@@ -1,39 +1,43 @@
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.errors import PyMongoError
+
 from app.config import settings
+
 import logging
 
 logger = logging.getLogger(__name__)
 
+
 class Database:
-    client: AsyncIOMotorClient = None
+    client: AsyncIOMotorClient | None = None
     db = None
+
 
 db_instance = Database()
 
+
 async def connect_to_mongo():
-    logger.info("Connecting to MongoDB...")
-    # Connection pooling configuration optimized for concurrent lookups
-    db_instance.client = AsyncIOMotorClient(
-        settings.MONGO_URI,
-        maxPoolSize=100,
-        minPoolSize=10,
-        maxIdleTimeMS=10000
-    )
-    # Extract database name from URI or default
-    db_name = settings.MONGO_URI.split('/')[-1].split('?')[0] or "infinity_share"
-    db_instance.db = db_instance.client[db_name]
-    
-    # Create indexes for blazing fast query performance (Phase 8 optimization)
-    await db_instance.db.files.create_index("file_id", unique=True)
-    await db_instance.db.files.create_index("custom_alias", unique=True, sparse=True)
-    await db_instance.db.users.create_index("user_id", unique=True)
-    logger.info("MongoDB connected and indexes verified.")
+    """Connect to MongoDB and create required indexes."""
 
-async def close_mongo_connection():
-    logger.info("Closing MongoDB connection...")
-    if db_instance.client:
-        db_instance.client.close()
-    logger.info("MongoDB disconnected.")
+    try:
+        logger.info("Connecting to MongoDB...")
 
-def get_db():
-    return db_instance.db
+        db_instance.client = AsyncIOMotorClient(
+            settings.MONGO_URI,
+            maxPoolSize=100,
+            minPoolSize=10,
+            maxIdleTimeMS=10000,
+            serverSelectionTimeoutMS=5000,
+            connectTimeoutMS=10000,
+            socketTimeoutMS=20000,
+            retryWrites=True,
+            retryReads=True,
+        )
+
+        # Verify connection
+        await db_instance.client.admin.command("ping")
+
+        db_name = (
+            settings.MONGO_URI.rsplit("/", 1)[-1]
+            .split("?")[0]
+            or "infinity
