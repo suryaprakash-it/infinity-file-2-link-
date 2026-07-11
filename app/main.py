@@ -58,4 +58,40 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-   
+    title="Infinity Share API",
+    description="Telegram File Streaming Service",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+# Security Middleware
+app.add_middleware(InfinitySecurityMiddleware)
+
+# Static Files
+app.mount(
+    "/static",
+    StaticFiles(directory=BASE_DIR / "static"),
+    name="static",
+)
+
+# Routers
+app.include_router(download_router, tags=["Downloads"])
+app.include_router(admin_router, tags=["Admin"])
+
+
+@app.get("/", tags=["System"])
+async def root():
+    return {
+        "status": "healthy",
+        "service": "Infinity Share Engine Online",
+        "version": "1.0.0",
+    }
+
+
+@app.get("/health", tags=["System"])
+async def health():
+    return {
+        "status": "ok",
+        "database": "connected",
+        "bot": "running",
+    }
