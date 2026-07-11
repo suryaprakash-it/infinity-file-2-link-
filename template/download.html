@@ -1,49 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infinity Share - Download</title>
+
+    <title>{{ file.file_name }} | Infinity Share</title>
+
+    <meta name="description" content="Download files securely using Infinity Share">
+
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
+
 <body>
 
-    <div class="infinity-container">
-        <div class="logo-space">
-            <h1>INFINITY <span>SHARE</span></h1>
-        </div>
+<div class="infinity-container">
 
-        <div class="file-box">
-            <div class="file-icon">📦</div>
-            <div class="file-name">{{ file.file_name }}</div>
-            <div class="file-meta">
-                Size: {{ file_size_formatted }} | Downloads: {{ file.download_count }}
-            </div>
-        </div>
-
-        <div class="action-buttons">
-            <a href="/api/download/{{ file.file_id }}" class="btn btn-primary">Download File</a>
-            <button onclick="copyToClipboard()" id="copyBtn" class="btn btn-secondary">Copy Link</button>
-        </div>
-
-        <div class="qr-section">
-            <div class="file-meta">Scan to download on mobile</div>
-            <div class="qr-box">
-                <!-- Using an optimized lightweight public API for instant client-side QR generation -->
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ current_url }}" alt="QR Code">
-            </div>
-        </div>
+    <div class="logo-space">
+        <h1>INFINITY <span>SHARE</span></h1>
     </div>
 
-    <script>
-        function copyToClipboard() {
-            navigator.clipboard.writeText(window.location.href);
-            const btn = document.getElementById('copyBtn');
-            btn.innerText = 'Copied! ✅';
-            setTimeout(() => {
-                btn.innerText = 'Copy Link';
-            }, 2000);
-        }
-    </script>
+    <div class="file-box">
+
+        <div class="file-icon">📦</div>
+
+        <div class="file-name">
+            {{ file.file_name }}
+        </div>
+
+        <div class="file-meta">
+            Size: {{ file_size_formatted }}
+            <br>
+            Downloads: {{ file.download_count }}
+        </div>
+
+    </div>
+
+    <div class="action-buttons">
+
+        <a
+            href="/api/download/{{ file.file_id }}"
+            class="btn btn-primary"
+            aria-label="Download File">
+
+            ⬇ Download File
+
+        </a>
+
+        <button
+            id="copyBtn"
+            class="btn btn-secondary"
+            onclick="copyToClipboard()">
+
+            📋 Copy Link
+
+        </button>
+
+    </div>
+
+    <div class="qr-section">
+
+        <div class="file-meta">
+            Scan QR Code to download on another device
+        </div>
+
+        <div class="qr-box">
+
+            <img
+                src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ current_url }}"
+                alt="QR Code"
+                loading="lazy">
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+async function copyToClipboard(){
+
+    const btn=document.getElementById("copyBtn");
+
+    try{
+
+        await navigator.clipboard.writeText(window.location.href);
+
+        btn.innerHTML="✅ Copied";
+
+    }catch{
+
+        const input=document.createElement("input");
+
+        input.value=window.location.href;
+
+        document.body.appendChild(input);
+
+        input.select();
+
+        document.execCommand("copy");
+
+        document.body.removeChild(input);
+
+        btn.innerHTML="✅ Copied";
+
+    }
+
+    setTimeout(()=>{
+
+        btn.innerHTML="📋 Copy Link";
+
+    },2000);
+
+}
+
+</script>
+
 </body>
 </html>
