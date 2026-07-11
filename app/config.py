@@ -1,14 +1,36 @@
-import os
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
+
 
 class Settings(BaseSettings):
-    API_ID: int = int(os.getenv("API_ID", 1234567))
-    API_HASH: str = os.getenv("API_HASH", "your_api_hash")
-    BOT_TOKEN: str = os.getenv("BOT_TOKEN", "your_bot_token")
-    
-    MONGO_URI: str = os.getenv("MONGO_URI", "mongodb://localhost:27017/infinity_share")
-    SERVER_URL: str = os.getenv("SERVER_URL", "http://localhost:8000")
-    
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "supersecretadminpasskey")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    # Telegram
+    API_ID: int = Field(..., description="Telegram API ID")
+    API_HASH: str = Field(..., description="Telegram API Hash")
+    BOT_TOKEN: str = Field(..., description="Telegram Bot Token")
+
+    # MongoDB
+    MONGO_URI: str = Field(
+        default="mongodb://localhost:27017/infinity_share"
+    )
+
+    # Website
+    SERVER_URL: str = Field(
+        default="http://localhost:8000"
+    )
+
+    # Security
+    SECRET_KEY: str = Field(...)
+
+    # Optional
+    DEBUG: bool = Field(default=False)
+    LOG_LEVEL: str = Field(default="INFO")
+    MAX_DOWNLOAD_CONNECTIONS: int = Field(default=100)
+
 
 settings = Settings()
