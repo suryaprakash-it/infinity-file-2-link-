@@ -1,1 +1,60 @@
-ho
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinity Admin Control Deck</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .admin-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.5rem; }
+        .stat-card { background: #181820; padding: 1rem; border-radius: 8px; border: 1px solid #252530; text-align: left;}
+        .stat-num { font-size: 1.8rem; color: var(--accent-red); font-weight: 800; margin-top: 0.5rem; }
+        .file-list { text-align: left; margin-top: 2rem; }
+        .file-row { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #1f1f26; font-size: 0.9rem;}
+        .delete-btn { background: none; border: none; color: #ff3344; cursor: pointer; font-weight: bold;}
+    </style>
+</head>
+<body>
+    <div class="infinity-container" style="max-width: 700px;">
+        <div class="logo-space">
+            <h1>INFINITY <span>CONTROL</span></h1>
+        </div>
+
+        <div class="admin-grid">
+            <div class="stat-card">📁 Total Files <div class="stat-num">{{ total_files }}</div></div>
+            <div class="stat-card">👥 Total Users <div class="stat-num">{{ total_users }}</div></div>
+            <div class="stat-card">📈 Downloads <div class="stat-num">{{ total_downloads }}</div></div>
+            <div class="stat-card">📊 Used Storage <div class="stat-num">{{ total_storage }}</div></div>
+        </div>
+
+        <div class="file-list">
+            <h3>📝 Recently Uploaded Files</h3>
+            {% for file in recent_files %}
+            <div class="file-row" id="row-{{ file.file_id }}">
+                <span>{{ file.file_name }} (📥 {{ file.download_count }})</span>
+                <button class="delete-btn" onclick="deleteFile('{{ file.file_id }}')">🗑 Delete</button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        async def deleteFile(fileId) {
+            const adminToken = prompt("Enter Admin Secret Key to authorize deletion:");
+            if(!adminToken) return;
+
+            const res = await fetch(`/admin/delete/${fileId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${adminToken}` }
+            });
+
+            if(res.ok) {
+                document.getElementById(`row-${fileId}`).remove();
+                alert("File entry dropped from engine indices mapping successfully.");
+            } else {
+                alert("Authorization failed / Token invalid.");
+            }
+        }
+    </script>
+</body>
+</html>
