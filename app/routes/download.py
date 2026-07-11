@@ -6,6 +6,14 @@ import logging
 from app.database import get_db
 from bot.bot import app_bot
 
+
+# Basic RegEx sanitization: Telegram file_ids are alphanumeric with occasional underscores/dashes
+if not file_id.isalnum() and not any(c in file_id for c in ['-', '_']):
+    raise HTTPException(status_code=400, detail="Malicious character sequences detected.")
+
+
+
+
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
