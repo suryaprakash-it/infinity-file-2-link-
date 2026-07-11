@@ -1,5 +1,5 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -10,9 +10,9 @@ class Settings(BaseSettings):
     )
 
     # Telegram
-    API_ID: int = Field(..., description="Telegram API ID")
-    API_HASH: str = Field(..., description="Telegram API Hash")
-    BOT_TOKEN: str = Field(..., description="Telegram Bot Token")
+    API_ID: int = Field(...)
+    API_HASH: str = Field(...)
+    BOT_TOKEN: str = Field(...)
 
     # MongoDB
     MONGO_URI: str = Field(
