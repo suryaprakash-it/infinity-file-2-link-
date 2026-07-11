@@ -1,22 +1,32 @@
+# app/main.py
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+import logging
+
 from app.database import connect_to_mongo, close_mongo_connection
+from bot.bot import app_bot
+from app.routes.download import router as download_router # <-- ADD THIS IMPORT
+
+logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Initialize DB Connection Pool
     await connect_to_mongo()
+    await app_bot.start()
+    logger.info("🤖 Pyrogram Bot started successfully.")
     yield
-    # Shutdown: Cleanly close pools
+    await app_bot.stop()
+    logger.info("🤖 Pyrogram Bot stopped.")
     await close_mongo_connection()
 
 app = FastAPI(
     title="Infinity Share API",
-    description="High-performance, async backend for Telegram file streaming",
-    version="1.0.0",
     lifespan=lifespan
 )
 
+# <-- ADD THIS LINE TO REGISTER THE DOWNLOAD ENGINE -->
+app.include_router(download_router, tags=["Downloads"])
+
 @app.get("/")
 async def root():
-    return {"status": "healthy", "service": "Infinity Share API"}
+    return {"status": "healthy", "service": "Infinity Share Engine Online"}
