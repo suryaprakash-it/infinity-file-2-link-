@@ -4,57 +4,216 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Infinity Admin Control Deck</title>
+
     <link rel="stylesheet" href="/static/css/style.css">
+
     <style>
-        .admin-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.5rem; }
-        .stat-card { background: #181820; padding: 1rem; border-radius: 8px; border: 1px solid #252530; text-align: left;}
-        .stat-num { font-size: 1.8rem; color: var(--accent-red); font-weight: 800; margin-top: 0.5rem; }
-        .file-list { text-align: left; margin-top: 2rem; }
-        .file-row { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #1f1f26; font-size: 0.9rem;}
-        .delete-btn { background: none; border: none; color: #ff3344; cursor: pointer; font-weight: bold;}
+        .admin-grid{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+            gap:1rem;
+            margin-top:1.5rem;
+        }
+
+        .stat-card{
+            background:#181820;
+            padding:1rem;
+            border-radius:10px;
+            border:1px solid #252530;
+            transition:.3s;
+        }
+
+        .stat-card:hover{
+            transform:translateY(-4px);
+            border-color:var(--accent-red);
+        }
+
+        .stat-num{
+            font-size:1.8rem;
+            font-weight:700;
+            color:var(--accent-red);
+            margin-top:.5rem;
+        }
+
+        .file-list{
+            margin-top:2rem;
+            text-align:left;
+        }
+
+        .file-row{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:1rem;
+            padding:14px 0;
+            border-bottom:1px solid #222;
+        }
+
+        .file-name{
+            flex:1;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+        }
+
+        .delete-btn{
+            background:#ff3344;
+            color:#fff;
+            border:none;
+            padding:8px 14px;
+            border-radius:6px;
+            cursor:pointer;
+            transition:.3s;
+        }
+
+        .delete-btn:hover{
+            background:#ff0019;
+        }
+
+        @media(max-width:700px){
+
+            .file-row{
+                flex-direction:column;
+                align-items:flex-start;
+            }
+
+            .delete-btn{
+                width:100%;
+            }
+
+        }
     </style>
+
 </head>
+
 <body>
-    <div class="infinity-container" style="max-width: 700px;">
-        <div class="logo-space">
-            <h1>INFINITY <span>CONTROL</span></h1>
-        </div>
 
-        <div class="admin-grid">
-            <div class="stat-card">📁 Total Files <div class="stat-num">{{ total_files }}</div></div>
-            <div class="stat-card">👥 Total Users <div class="stat-num">{{ total_users }}</div></div>
-            <div class="stat-card">📈 Downloads <div class="stat-num">{{ total_downloads }}</div></div>
-            <div class="stat-card">📊 Used Storage <div class="stat-num">{{ total_storage }}</div></div>
-        </div>
+<div class="infinity-container" style="max-width:850px;">
 
-        <div class="file-list">
-            <h3>📝 Recently Uploaded Files</h3>
-            {% for file in recent_files %}
-            <div class="file-row" id="row-{{ file.file_id }}">
-                <span>{{ file.file_name }} (📥 {{ file.download_count }})</span>
-                <button class="delete-btn" onclick="deleteFile('{{ file.file_id }}')">🗑 Delete</button>
-            </div>
-            {% endfor %}
-        </div>
+    <div class="logo-space">
+        <h1>INFINITY <span>CONTROL</span></h1>
     </div>
 
-    <script>
-        async def deleteFile(fileId) {
-            const adminToken = prompt("Enter Admin Secret Key to authorize deletion:");
-            if(!adminToken) return;
+    <div class="admin-grid">
 
-            const res = await fetch(`/admin/delete/${fileId}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${adminToken}` }
-            });
+        <div class="stat-card">
+            📁 Total Files
+            <div class="stat-num">{{ total_files }}</div>
+        </div>
 
-            if(res.ok) {
-                document.getElementById(`row-${fileId}`).remove();
-                alert("File entry dropped from engine indices mapping successfully.");
-            } else {
-                alert("Authorization failed / Token invalid.");
+        <div class="stat-card">
+            👥 Total Users
+            <div class="stat-num">{{ total_users }}</div>
+        </div>
+
+        <div class="stat-card">
+            📈 Downloads
+            <div class="stat-num">{{ total_downloads }}</div>
+        </div>
+
+        <div class="stat-card">
+            💾 Storage
+            <div class="stat-num">{{ total_storage }}</div>
+        </div>
+
+    </div>
+
+    <div class="file-list">
+
+        <h3>📝 Recently Uploaded Files</h3>
+
+        {% if recent_files %}
+
+            {% for file in recent_files %}
+
+            <div class="file-row" id="row-{{ file.file_id }}">
+
+                <div class="file-name">
+                    <strong>{{ file.file_name }}</strong><br>
+                    📥 Downloads: {{ file.download_count }}
+                </div>
+
+                <button
+                    class="delete-btn"
+                    onclick="deleteFile('{{ file.file_id }}')">
+                    🗑 Delete
+                </button>
+
+            </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <p>No uploaded files found.</p>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+<script>
+
+async function deleteFile(fileId){
+
+    const confirmed = confirm(
+        "Delete this file permanently?"
+    );
+
+    if(!confirmed){
+        return;
+    }
+
+    const adminToken = prompt(
+        "Enter Admin Secret Key"
+    );
+
+    if(!adminToken){
+        return;
+    }
+
+    try{
+
+        const response = await fetch(
+            `/admin/delete/${fileId}`,
+            {
+                method:"DELETE",
+                headers:{
+                    "Authorization":`Bearer ${adminToken}`
+                }
             }
+        );
+
+        if(response.ok){
+
+            const row=document.getElementById(`row-${fileId}`);
+
+            if(row){
+                row.remove();
+            }
+
+            alert("✅ File deleted successfully.");
+
+        }else{
+
+            const error=await response.json();
+
+            alert(error.detail || "Delete failed.");
+
         }
-    </script>
+
+    }catch(error){
+
+        console.error(error);
+
+        alert("Server error.");
+
+    }
+
+}
+
+</script>
+
 </body>
 </html>
